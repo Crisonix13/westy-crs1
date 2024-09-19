@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Custom rule for company CRS with clientID, now pointing to the services folder
+RewriteRule ^company/crs/([0-9]+)$ services/crs.php?clientID=$1 [L]
+
+# General rule to add .php extension if not present
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([^.]+)$ $1.php [NC,L]

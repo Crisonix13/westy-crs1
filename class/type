@@ -1,0 +1,36 @@
+public function addConditionalQuestion($mainQuestion, $mainQuestionAnswer, $conditionalQuestion,
+                                        $cqNumOptions, $answersData){
+        global $conn;
+
+        $query = "INSERT INTO conditional_question(cqContent, cqNumOptions)
+        VALUES ('$conditionalQuestions', '$cqNumOptions')";
+        $result = mysqli_query($conn, $query);
+
+        if ($result) {
+            $conditionalQuestionID = mysqli_insert_id($conn);
+
+            $insertAnswerTriggerQuery = "INESERT INTO trigger_condition(answerID, cqID) VALUES('$mainQuestionAnswer', '$conditionalQuestionID')";
+            mysqli_query($conn,$insertAnswerTriggerQuery);
+            foreach ($answersData as $answerContent => $productIDs){
+                $answerContent = mysqli_real_escape_string($conn, answerContent);
+
+                $answerInsertQuery = "INSERT INTO answer(answerContent) VALUES ('$answerContent')";
+                $answerResult = mysqli_query($conn, $answerInsertQuery);
+
+                if ($answerResult) {
+                    $answerID = mysqli_insert_id($conn);
+
+                    foreach ($productIDs as prodID) {
+                        $productAnswerQuery = "INSERT INTO product_answer(prodID, answerID) VALUES ('$prodID', '$answerID')";
+                        mysqli_query($conn, $productAnswerQuery);
+                    }
+
+                    $questionAnswerQuery = "INSERT INTO question_answer(cqID, answerID) VALUES ('$conditionalQuestionID, 'answerID')";
+                    mysqli_query($conn, $questionAnswerQuery;)
+                }
+            }
+            return true;
+        } else { 
+            return false;
+        }
+    }
