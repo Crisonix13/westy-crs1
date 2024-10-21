@@ -6,9 +6,13 @@
     <title>PTT Page - Company Selection and Media Upload</title>
     <!-- Bootstrap CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
     <style>
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: auto;
             background: #fff;
             padding: 20px;
@@ -16,7 +20,7 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
         h1 {
-            font-size: 24px;
+            font-size: 28px;
             color: #333;
             border-bottom: 2px solid #007bff;
             padding-bottom: 10px;
@@ -25,183 +29,174 @@
         .error {
             color: #ff0000;
         }
+        .form-section {
+            margin-bottom: 20px;
+        }
+        .form-section h2 {
+            font-size: 20px;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .form-section .form-check {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
 <?php
+session_start();
 require_once '../components/db.php';
 include '../components/sidebar.php';
 include '../components/navbar.php';
-
-// Include your necessary PHP code here
-
 ?>
-    <div class="container w-75 my-5">
-        <div class="card my-3">
-            <div class="card-body">
-                <div class="row align-items-center my-2">
-                    <div class="col-xl-12 col-lg-12 col-md-12">
-                        <h1 class="fw-bold my-3 me-2">Upload Attachments</h1>
-                    </div>
-                </div>
-                <div class="row align-items-center my-2">
-                    <div class="col-xl-12 col-lg-12 col-md-12">
-                        <?php
-                        $fileTypes = []; // Assume $fileTypes is populated with relevant data
-                        ?>
-                        <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="flexCheckNotarizedAffidavit" disabled
-                                    <?php if (in_array('notarizedAffidavit', $fileTypes)) echo 'checked'; ?>>
-                                <label class="form-check-label" for="flexCheckNotarizedAffidavit">
-                                    Duly notarized affidavit attesting to the truth, accuracy, and genuineness of all information, documents, and records contained and attached in the application.
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckWasteManagementPlan" disabled
-                                    <?php if (in_array('wasteManagementPlan', $fileTypes)) echo 'checked'; ?>>
-                                <label class="form-check-label" for="flexCheckWasteManagementPlan">
-                                    Description of existing waste management plan
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckPcoAccreditation" disabled
-                                    <?php if (in_array('pcoAccreditation', $fileTypes)) echo 'checked'; ?>>
-                                <label class="form-check-label" for="flexCheckPcoAccreditation">
-                                    Pollution Control Officer accreditations certificate
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckEmergencyPlan" disabled
-                                    <?php if (in_array('emergencyPlan', $fileTypes)) echo 'checked'; ?>>
-                                <label class="form-check-label" for="flexCheckEmergencyPlan">
-                                    Contingency and Emergency Plan
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckStorageAreaPhotos" disabled
-                                    <?php if (in_array('storageAreaPhotos', $fileTypes)) echo 'checked'; ?>>
-                                <label class="form-check-label" for="flexCheckStorageAreaPhotos">
-                                    Photographs of the hazardous waste storage area
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckRequestLetter" disabled
-                                    <?php if (in_array('requestLetter', $fileTypes)) echo 'checked'; ?>>
-                                <label class="form-check-label" for="flexCheckRequestLetter">
-                                    Official letter of request
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row align-items-center my-2">
-                    <div class="col-xl-6 col-lg-6 col-md-6">
-                        <button type="button" class="btn text-white w-100" style="background-color:#586854" href="#" role="button" onclick="showFileTable()">
-                            <i class="fa-solid fa-plus me-1"></i>Add Files
-                        </button>
-                    </div>
-                    <div class="col-xl-6 col-lg-6 col-md-6">
-                        <button type="submit" class="btn text-white w-100" style="background-color:#253E23" name="finalizeApplication" role="button">
-                            <i class="fa-solid fa-check-to-slot"></i>Finalize Application
-                        </button>
-                    </div>
-                </div>
-                <div class="row align-items-center my-2">
-                    <table class="table table-responsive table-hover">
-                        <thead class="text-start">
-                            <tr>
-                                <th scope="col" class="col-3">File Name</th>
-                                <th scope="col" class="col-1"></th>
-                                <th scope="col" class="col-5">File Type</th>
-                                <th scope="col" class="col-3">
-                                    <button type="button" class="btn text-white w-100" style="background-color:#253E23" href="#" data-bs-toggle="modal" data-bs-target="#addFileModal" role="button">
-                                        <i class="fa-solid fa-check-to-slot"></i>Upload File
-                                    </button>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                                if (isset($_SESSION['files'])) {
-                                    $fileTypeDescriptions = [
-                                        "notarizedAffidavit" => "Duly notarized affidavit attesting to the truth, accuracy, and genuineness of all information, documents, and records contained and attached in the application.",
-                                        "massBalance" => "Mass balance of manufacturing process",
-                                        "wasteManagementPlan" => "Description of existing waste management plan",
-                                        "wasteAnalysis" => "Analysis of waste(s)",
-                                        "otherInfo" => "Other relevant information e.g. planned changes in production process or output, comparison with relation operation.",
-                                        "eccCnc" => "Copy of Environmental Compliance Certificate (ECC) / Certificate of Non-Coverage (CNC)",
-                                        "pto" => "Copy of Valid Permit to Operate (PTO)",
-                                        "dischargePermit" => "Copy of Valid Discharge Permit (DP)",
-                                        "pcoAccreditation" => "Pollution Control Officer accreditations certificate",
-                                        "emergencyPlan" => "Contingency and Emergency Plan",
-                                        "storageAreaPhotos" => "Photographs of the hazardous waste storage area",
-                                        "requestLetter" => "Official letter of request",
-                                        "tenantsList" => "List of individual tenants/establishments",
-                                        "memberInfo" => "Information on the individual member establishment per approved cluster",
-                                        "embClusteringLetter" => "Letter from the EMB Central Office on the approved clustering",
-                                        "jointUnderstandingAffidavit" => "Affidavit of Joint Understanding among individual member establishments, the cluster Managing Head, and the cluster PCO",
-                                        "clusterMap" => "Map of clustered individual establishments including geotagged photos of the facade of the establishments"
-                                    ];
-                                    foreach ($_SESSION['files'] as $key => $file) { ?>
-                                        <tr>
-                                            <td class='text-start'><?php echo htmlspecialchars($file['fileName']); ?></td>
-                                            <td class='text-start'><?php echo htmlspecialchars($file['fileSize']); ?></td>
-                                            <td class='text-start'><?php echo htmlspecialchars($fileTypeDescriptions[$file['fileType']] ?? 'Unknown File Type'); ?></td>
-                                            <td class='text-start'>
-                                                <form action="functions.php" method="post">
-                                                    <input type="hidden" name="delete_key" value="<?php echo $key; ?>">
-                                                    <button type="submit" name="delete_file" class="btn btn-outline-danger">
-                                                        <i class='fa-solid fa-trash'></i>
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    <?php
-                                    }
-                                }
-                            ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+<?php
+$sqlCompanies = "SELECT clientID, clientName FROM client";
+$resultCompanies = $conn->query($sqlCompanies);
+?>
+<div class="container my-5">
+    <h1 class="fw-bold">Upload Attachments</h1>
+    <div class="form-group mb-4">
+        <label for="clientSelect">Select Client</label>
+        <select class="form-control" id="clientSelect" name="clientID" required>
+            <option value="">Select Company</option>
+            <?php
+            if ($resultCompanies && $resultCompanies->num_rows > 0) {
+                while ($company = $resultCompanies->fetch_assoc()) {
+                    echo "<option value='" . (int)$company['clientID'] . "'>" . htmlspecialchars($company['clientName']) . "</option>";
+                }
+            }
+            ?>
+        </select>
     </div>
 
-<!-- Add File Modal -->
-<div class="modal fade" id="addFileModal" tabindex="-1" aria-labelledby="addFileModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addFileModalLabel">Add File</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form action="functions.php" method="post" enctype="multipart/form-data">
-                    <div class="row align-items-center my-2">
-                        <div class="col-xl-3 col-lg-3 col-md-3">
-                            <label for="fileType" class="form-label">File Type:</label>
-                        </div>
-                        <div class="col-xl-9 col-lg-9 col-md-9">
-                            <select class="form-select" name="fileType" id="documentSelect">
-                                <option value="">Select file type</option>
-                                <option value="notarizedAffidavit">Duly notarized affidavit attesting to the truth, accuracy, and genuineness of all information, documents, and records contained and attached in the application.</option>
-                                <!-- Add other options here -->
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row align-items-center my-2">
-                        <div class="col-xl-3 col-lg-3 col-md-3">
-                            <label for="fileName" class="form-label">File Name:</label>
-                        </div>
-                        <div class="col-xl-9 col-lg-9 col-md-9">
-                            <input type="file" class="form-control" id="fileName" name="fileName" placeholder="File Name" required>
-                        </div>
-                    </div>
-                    <div class="text-end">
-                        <button type="submit" name="addFile" class="btn btn-success w-25">Add</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+    <div class="form-section">
+        <h2>Notarized Affidavit</h2>
+        <form action="upload_handler.php" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="fileType" value="notarizedAffidavit">
+            <input type="file" class="form-control my-2" name="fileName[]" multiple required>
+            <input type="hidden" name="clientID" value="" id="clientIDNotarizedAffidavit">
+            <button type="submit" name="addFile" class="btn btn-success">Add File</button>
+        </form>
     </div>
+
+    <div class="form-section">
+        <h2>Waste Management Plan</h2>
+        <form action="upload_handler.php" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="fileType" value="wasteManagementPlan">
+            <input type="file" class="form-control my-2" name="fileName[]" multiple required>
+            <input type="hidden" name="clientID" value="" id="clientIDWasteManagementPlan">
+            <button type="submit" name="addFile" class="btn btn-success">Add File</button>
+        </form>
+    </div>
+
+    <div class="form-section">
+        <h2>PCO Accreditation</h2>
+        <form action="upload_handler.php" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="fileType" value="pcoAccreditation">
+            <input type="file" class="form-control my-2" name="fileName[]" multiple required>
+            <input type="hidden" name="clientID" value="" id="clientIDPcoAccreditation">
+            <button type="submit" name="addFile" class="btn btn-success">Add File</button>
+        </form>
+    </div>
+
+    <div class="form-section">
+        <h2>Emergency Plan</h2>
+        <form action="upload_handler.php" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="fileType" value="emergencyPlan">
+            <input type="file" class="form-control my-2" name="fileName[]" multiple required>
+            <input type="hidden" name="clientID" value="" id="clientIDEmergencyPlan">
+            <button type="submit" name="addFile" class="btn btn-success">Add File</button>
+        </form>
+    </div>
+
+    <div class="form-section">
+        <h2>Storage Area Photos</h2>
+        <form action="upload_handler.php" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="fileType" value="storageAreaPhotos">
+            <input type="file" class="form-control my-2" name="fileName[]" multiple required>
+            <input type="hidden" name="clientID" value="" id="clientIDStorageAreaPhotos">
+            <button type="submit" name="addFile" class="btn btn-success">Add File</button>
+        </form>
+    </div>
+
+    <div class="form-section">
+        <h2>Request Letter</h2>
+        <form action="upload_handler.php" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="fileType" value="requestLetter">
+            <input type="file" class="form-control my-2" name="fileName[]" multiple required>
+            <input type="hidden" name="clientID" value="" id="clientIDRequestLetter">
+            <button type="submit" name="addFile" class="btn btn-success">Add File</button>
+        </form>
+    </div>
+
+    <?php if (isset($_SESSION['files'])): ?>
+        <div class="form-section">
+            <h2>Uploaded Files</h2>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>File Name</th>
+                        <th>File Size</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                    </tr>
+                    <thead>
+    <tr>
+        <th>File Name</th>
+        <th>File Size</th>
+        <th>Description</th>
+        <th>Action</th>
+    </tr>
+</thead>
+<tbody>
+    <?php
+    $fileTypeDescriptions = [
+        "notarizedAffidavit" => "Duly notarized affidavit attesting to the truth, accuracy, and genuineness of all information, documents, and records contained and attached in the application.",
+        "massBalance" => "Mass balance of manufacturing process",
+        "wasteManagementPlan" => "Description of existing waste management plan",
+        "wasteAnalysis" => "Analysis of waste(s)",
+        "otherInfo" => "Other relevant information e.g. planned changes in production process or output, comparison with relation operation.",
+        "eccCnc" => "Copy of Environmental Compliance Certificate (ECC) / Certificate of Non-Coverage (CNC)",
+        "pto" => "Copy of Valid Permit to Operate (PTO)",
+        "dischargePermit" => "Copy of Valid Discharge Permit (DP)",
+        "pcoAccreditation" => "Pollution Control Officer accreditations certificate",
+        "emergencyPlan" => "Contingency and Emergency Plan",
+        "storageAreaPhotos" => "Photographs of the hazardous waste storage area",
+        "requestLetter" => "Official letter of request",
+        "tenantsList" => "List of individual tenants/establishments",
+        "memberInfo" => "Information on the individual member",
+        "embClusteringLetter" => "Letter from the EMB Central Office on the approved clustering",
+        "jointUnderstandingAffidavit" => "Affidavit of Joint Understanding among individual member establishments, the cluster Managing Head, and the cluster PCO",
+        "clusterMap" => "Map of clustered individual establishments including geotagged photos of the facade of the establishments"
+    ];
+    foreach ($_SESSION['files'] as $key => $file): ?>
+        <tr>
+            <td><?php echo htmlspecialchars($file['fileName']); ?></td>
+            <td><?php echo htmlspecialchars($file['fileSize']); ?></td>
+            <td><?php echo htmlspecialchars($fileTypeDescriptions[$file['fileType']] ?? 'Unknown File Type'); ?></td>
+            <td>
+                <form action="functions.php" method="post">
+                    <input type="hidden" name="delete_key" value="<?php echo $key; ?>">
+                    <button type="submit" name="delete_file" class="btn btn-outline-danger">
+                        <i class='fa-solid fa-trash'></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+</tbody>
+</table>
 </div>
+<?php endif; ?>
+</div>
+
+<script>
+    document.getElementById('clientSelect').addEventListener('change', function() {
+        var clientID = this.value;
+        document.querySelectorAll('input[name="clientID"]').forEach(function(input) {
+            input.value = clientID;
+        });
+    });
+</script>
+</body>
+</html>

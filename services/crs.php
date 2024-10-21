@@ -222,48 +222,129 @@ if ($clientID > 0) {
                             $clientDetails = $result->fetch_assoc();
                             $stmt->close();
 
-                            // Check if there is an uploaded media file
-                            if (!empty($clientDetails['uploaded_media'])) {
-                                echo "<h2 class='mb-4'>Uploaded Media</h2>";
-                                echo "<div class='row'>";
-                                echo "<div class='col-md-6'>";
-                                echo "<div class='mb-3'>";
-                                echo "<label><strong>Uploaded Media</strong></label>";
+// Check if there is an uploaded media file
+if (!empty($clientDetails['uploaded_media'])) {
+    echo "<h2 class='mb-4'>Uploaded Media</h2>";
+    echo "<div class='row'>";
 
-                                // Assuming it's a PDF, provide a link to view it
-                                $mediaPath = 'services/uploads/' . htmlspecialchars($clientDetails['uploaded_media']);
-                                if (pathinfo($clientDetails['uploaded_media'], PATHINFO_EXTENSION) === 'pdf') {
-                                    echo "<a href='" . htmlspecialchars($mediaPath) . "' target='_blank'>View Uploaded PDF</a>";
-                                } else {
-                                    echo "<p>No media uploaded or file type is not supported for display.</p>";
-                                }
+    // Wrap media info in form structure for uniform styling
+    echo "<form method='post' action='process_media.php'>";  // Optional: if there's any submission needed for media files
 
-                                echo "</div>";
-                                echo "</div>"; // Close col-md-6
-                                echo "</div>"; // Close row
-                            } else {
-                                echo "<p>No media file uploaded for this client.</p>";
-                            }
+    echo "<div class='col-md-6'>";
+    echo "<div class='mb-3'>";
 
+    // Display a label for the uploaded media
+    echo "<label><strong>Uploaded Media</strong></label>";
 
+    // Get media path
+    $mediaPath = 'services/uploads/' . htmlspecialchars($clientDetails['uploaded_media']);
+    
+    // Display media based on file type
+    echo "<input type='text' class='form-control' readonly value='" . htmlspecialchars($clientDetails['uploaded_media']) . "'>";
+    echo "<div class='mt-2'>";
+    
+    // Assuming the file is a PDF
+    if (pathinfo($clientDetails['uploaded_media'], PATHINFO_EXTENSION) === 'pdf') {
+        echo "<a href='" . htmlspecialchars($mediaPath) . "' target='_blank'>Download File</a><br>";
+    } else {
+        // Handle unsupported media types
+        echo "<p class='text-muted'>No media uploaded or file type is not supported for display.</p>";
+    }
 
-                            // Add other application-related information here
-                        } else {
-                            echo "<p class='error'>No application found for this client.</p>";
-                        }
-                    } else {
-                        echo "<p class='error'>Error preparing application statement: " . $conn->error . "</p>";
-                    }
-                } else {
-                    echo "<p class='error'>Client not found.</p>";
-                }
-            } else {
-                echo "<p class='error'>Error preparing client statement: " . $conn->error . "</p>";
-            }
+    // Display additional details like upload date and time (if available in clientDetails)
+    if (!empty($clientDetails['uploadTime'])) {
+        echo "<small><strong>Date & Time Uploaded:</strong> " . htmlspecialchars($clientDetails['uploadTime']) . "</small><br>";
+    }
+
+    echo "</div>";  // Close media link container
+    echo "</div>";  // Close form-control container
+    echo "</div>";  // Close col-md-6
+
+    echo "</form>";  // Close form
+
+    echo "</div>";  // Close row
+} else {
+    // Handle case where no media is uploaded
+    echo "<p>No media file uploaded for this client.</p>";
+}
+
+// Define file descriptions associated with each uploaded file (you can adjust this to suit your needs)
+$fileDescriptions = [
+    'Duly notarized affidavit attesting to the truth, accuracy, and genuineness of all information, documents, and records contained and attached in the application.',
+    'Description of existing waste management plan',
+    'Pollution Control Officer accreditation certificate',
+    'Contingency and Emergency Plan',
+    'Photographs of the hazardous waste storage area',
+    'Official letter of request',
+];
+
+// Fetch uploaded files for the client from the uploads table
+$sql = "SELECT id, fileType, fileName, filePath, fileSize, uploadTime FROM uploads WHERE clientID = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $clientID);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    echo "<h2 class='mb-4'>Uploaded Files</h2>";
+    echo "<div class='row'>";
+
+    $counter = 0;
+
+    echo "<form method='post' action='process_files.php'>";
+
+    while ($file = $result->fetch_assoc()) {
+        $description = isset($fileDescriptions[$counter]) ? $fileDescriptions[$counter] : 'File Description Unavailable';
+
+        echo "<div class='col-md-6'>";
+        echo "<div class='mb-3'>";
+        
+        echo "<label for='file_" . htmlspecialchars($file['id']) . "'><strong>" . htmlspecialchars($description) . "</strong></label>";
+        
+        $filePath = 'services/uploads/' . htmlspecialchars($file['filePath']);
+        echo "<input type='text' class='form-control' readonly value='" . htmlspecialchars($file['fileName']) . "'>";
+        echo "<div class='mt-2'>";
+        
+        if ($file['fileType'] === 'pdf') {
+            echo "<a href='" . htmlspecialchars($filePath) . "' target='_blank'>View PDF</a><br>";
         } else {
-            echo "<p class='error'>Invalid client ID.</p>";
+            echo "<a href='" . htmlspecialchars($filePath) . "' download>Download File</a><br>";
         }
-        ?>
-    </div>
+
+        echo "<strong>Date & Time Uploaded:</strong> " . htmlspecialchars($file['uploadTime']) . "</small><br>";
+        echo "</div>";
+        echo "</div>";
+        echo "</div>";
+        $counter++;
+    }
+
+    echo "</div>";
+    
+    echo "<button type='submit' class='btn btn-primary'>Submit</button>";
+    echo "</form>";
+} else {
+    echo "<p>No files uploaded for this client.</p>";
+}
+
+$stmt->close();
+
+
+             } else {
+                 echo "<p class='error'>No application found for this client.</p>";
+             }
+         } else {
+             echo "<p class='error'>Error preparing application statement: " . $conn->error . "</p>";
+         }
+     } else {
+         echo "<p class='error'>Client not found.</p>";
+     }
+ } else {
+     echo "<p class='error'>Error preparing client statement: " . $conn->error . "</p>";
+ }
+} else {
+ echo "<p class='error'>Invalid client ID.</p>";
+}
+?>
+ </div>
 </body>
 </html>

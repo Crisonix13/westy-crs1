@@ -179,12 +179,13 @@ function handleAddFile() {
             'fileType' => $fileType
         ];
 
-        header("Location: application?step=5");
+        header("Location: hwms.php");
         exit();
     } else {
         echo "Sorry, there was an error uploading your file.";
     }
 }
+
 
 // Function to handle file deletion
 function handleDeleteFile() {
@@ -204,7 +205,7 @@ function handleDeleteFile() {
         $_SESSION['files'] = array_values($_SESSION['files']);
     }
 
-    header("Location: application?step=5");
+    header("Location: hwms.php");
     exit();
 }
 
@@ -238,7 +239,6 @@ function submitApplication($classUser) {
     // Geolocation
     $latitude = isset($_POST['latitude']) ? htmlspecialchars($_POST['latitude']) : '';
     $longitude = isset($_POST['longitude']) ? htmlspecialchars($_POST['longitude']) : '';
-
 
     $result = $classUser->submitApplication($clientID, $managingHead, $managingHeadMobNum, $managingHeadTelNum, $natureBusiness, $psicNum, $psicDesc, $dateEstablishment, $numEmployees, 
                                             $pcoName, $pcoMobNum, $pcoTelNum, $pcoEmail, $pcoAccredNo, $pcoAccredDate, 
